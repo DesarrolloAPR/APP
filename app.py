@@ -4,54 +4,80 @@ import numpy as np
 from ultralytics import YOLO
 from PIL import Image
 
+# Configuración inicial
 st.set_page_config(page_title="IA Prevención de Riesgos", layout="centered")
 
 st.title("🛡️ Sistema de Control de EPP y Zonas")
-st.write("Usa la cámara de tu móvil para detectar actos inseguros.")
+st.write("Análisis de seguridad: Detección de casco y zona restringida.")
 
-# 1. Cargar el modelo (se descarga automáticamente la primera vez)
+# 1. Cargar el modelo
 @st.cache_resource
 def load_model():
-    return YOLO('yolov8n.pt') # Modelo base: detecta personas
+    # Nota: yolov8n detecta personas. Para cascos específicos se suele usar un modelo entrenado.
+    return YOLO('yolov8n.pt') 
 
 model = load_model()
 
-# 2. Configuración en la barra lateral (Aquí puedes editar tú mismo)
+# 2. Configuración en la barra lateral
 st.sidebar.header("Configuración de Seguridad")
 conf_threshold = st.sidebar.slider("Confianza de la IA", 0.0, 1.0, 0.5)
 detectar_zona = st.sidebar.checkbox("Activar zona restringida", value=True)
 
-# 3. Selector de cámara (Interfaz móvil)
-img_file_buffer = st.camera_input("Toma una foto para inspeccionar el área")
+# 3. Entrada de cámara
+img_file_buffer = st.camera_input("Toma una foto para inspección")
 
 if img_file_buffer is not None:
-    # Convertir la imagen para que la IA la entienda
+    # Preparar imagen
     img = Image.open(img_file_buffer)
     img_array = np.array(img)
 
     # Ejecutar detección
     results = model(img_array, conf=conf_threshold)
     
-    # Dibujar resultados
+    # Variables de control
+    tiene_casco = False
+    alerta_zona = False
+    
     for r in results:
         annotated_frame = r.plot()
+        h, w, _ = annotated_frame.shape
         
-        # Lógica de zona (Ejemplo: Alerta si hay alguien en la mitad superior)
-        if detectar_zona:
-            height, width, _ = annotated_frame.shape
-            # Dibujamos una línea roja de "Peligro"
-            cv2.line(annotated_frame, (0, height//2), (width, height//2), (255, 0, 0), 5)
+        # Analizar cada objeto detectado
+        for box in r.boxes:
+            # Lógica de Casco (Basada en tu segundo pronto)
+            # Filtramos por nombre de clase (asumiendo que el modelo tiene 'helmet' o 'casco')
+            cls_id = int(box.cls)
+            label = model.names[cls_id].lower()
             
-            for box in r.boxes:
-                y1 = box.xyxy
-                if y1 < height//2: # Si la cabeza está arriba de la línea
-                    st.error("⚠️ ¡ALERTA! Trabajador en zona no permitida.")
+            if "helmet" in label or "casco" in label:
+                tiene_casco = True
+            
+            # Lógica de Zona (Basada en tu primer pronto)
+            if detectar_zona:
+                y1 = box.xyxy # Coordenada Y superior de la caja
+                if y1 < h // 2:
+                    alerta_zona = True
 
-    # Mostrar la imagen procesada
-    st.image(annotated_frame, caption="Análisis en Tiempo Real")
+        # Dibujar línea de zona si está activa
+        if detectar_zona:
+            cv2.line(annotated_frame, (0, h//2), (w, h//2), (255, 0, 0), 5)
+
+    # 4. Mostrar resultados y Alertas
+    st.image(annotated_frame, caption="Resultado del Análisis")
     
-# 4. Asumiendo que 'foto' es la imagen capturada por tu cámara
-deteccion = model(foto)
-tiene_casco = len(deteccion.boxes) > 0
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if tiene_casco:
+            st.success("✅ Casco detectado")
+        else:
+            st.error("❌ Sin casco visible")
+            
+    with col2:
+        if alerta_zona:
+            st.error("⚠️ Invasión de zona")
+        else:
+            st.success("✅ Zona segura")
 
-print("¿Lleva casco?:", "Sí" if tiene_casco else "No")
+    # Resumen final para consola/logs (tu lógica de print)
+    print(f"Estado: Casco={tiene_casco}, Invasión={alerta_zona}")
