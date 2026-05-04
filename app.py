@@ -50,13 +50,7 @@ if img_file_buffer is not None:
             # Lógica de Casco
             if "helmet" in label or "casco" in label:
                 tiene_casco = True
-            
-            # Lógica de Zona (Corregida la extracción de coordenada Y)
-            if detectar_zona:
-                # box.xyxy es [x1, y1, x2, y2]
-                y_superior = float(box.xyxy) 
-                if y_superior < h // 2:
-                    alerta_zona = True
+
 
         # Dibujar línea de zona (Color BGR en OpenCV)
         if detectar_zona:
