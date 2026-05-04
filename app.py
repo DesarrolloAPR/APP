@@ -72,3 +72,15 @@ if img_file_buffer is not None:
             st.error("🚨 Invasión de zona")
         else:
             st.success("✅ Zona segura")
+
+from ultralytics import YOLO
+
+def entrenar():
+    # 1. Carga el modelo nano (el más ligero)
+    model = YOLO('yolov8n.pt') 
+
+    # 2. Entrena usando tu archivo data.yaml
+    model.train(data='data.yaml', epochs=50, imgsz=640)
+
+if __name__ == "__main__":
+    entrenar()
