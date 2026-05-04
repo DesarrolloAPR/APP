@@ -1,0 +1,6 @@
+path: /content/IA-Prevencion-Riesgos  # Reemplaza con el nombre exacto de tu repo
+train: datasets/train/images
+val: datasets/val/images
+
+nc: 2
+names: ['casco', 'persona']
