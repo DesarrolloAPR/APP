@@ -120,9 +120,6 @@ st.sidebar.header("Panel de Control")
 if st.sidebar.button("🚀 Iniciar Entrenamiento ahora"):
     ejecutar_entrenamiento()
 
-conf_threshold = st.sidebar.slider("Confianza de la IA", 0.0, 1.0, 0.4)
-detectar_zona = st.sidebar.checkbox("Activar zona restringida", value=True)
-
 # Entrada de cámara
 img_file_buffer = st.camera_input("Toma una foto para inspección")
 
