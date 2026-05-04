@@ -49,3 +49,8 @@ if img_file_buffer is not None:
 
     # Mostrar la imagen procesada
     st.image(annotated_frame, caption="Análisis en Tiempo Real")
+# Asumiendo que 'foto' es la imagen capturada por tu cámara
+deteccion = model(foto)
+tiene_casco = len(deteccion.boxes) > 0
+
+print("¿Lleva casco?:", "Sí" if tiene_casco else "No")
